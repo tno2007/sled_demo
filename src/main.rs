@@ -1,8 +1,7 @@
 #[macro_use]
 extern crate rocket;
 
-use dashmap::DashMap;
-// use rocket::serde::json::Json;
+// use dashmap::DashMap;
 use rocket::serde::{Serialize, json::Json};
 use rocket_okapi::{
     openapi, openapi_get_routes,
@@ -11,15 +10,15 @@ use rocket_okapi::{
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::modules::etf::Etf;
-//use std::error::Error;
+//use crate::modules::etf::Etf;
 
 // import ./src/modules/etf.rs module
-mod modules {
-    pub mod etf;
-}
+mod etf;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use etf::Etf;
+use etf::read_etfs_from_csv;
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 struct Person {
     id: u64,
     name: String,
@@ -34,27 +33,36 @@ struct Message {
 
 #[openapi]
 #[get("/")]
-fn index() -> Json<Message> {
-    Json(Message {
-        text: "Welcome to the ETF API!".to_string(),
-    })
+fn index() -> Json<Vec<Message>> {
+    // define 2 messages
+    let messages = vec![
+        Message {
+            text: "Hello, World!".to_string(),
+        },
+        Message {
+            text: "This is a Rocket API!".to_string(),
+        },
+    ];
+
+    Json(messages)
 }
 
 #[openapi]
 #[get("/etfs")]
 fn get_etfs() -> Json<Vec<Etf>> {
     let csv_file_path = "src/etfs.csv"; // Adjust the path as needed
-    let etfs = modules::etf::read_etfs_from_csv(csv_file_path).unwrap_or_else(|err| {
+    let etfs = read_etfs_from_csv(csv_file_path).unwrap_or_else(|err| {
         eprintln!("Error reading ETFs from CSV: {}", err);
         Vec::new()
     });
+
     Json(etfs)
 }
 
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/api", openapi_get_routes![index])
+        .mount("/api", openapi_get_routes![index, get_etfs])
         .mount(
             "/swagger",
             make_swagger_ui(&SwaggerUIConfig {
