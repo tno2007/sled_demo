@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate rocket;
 
+use std::{env, path};
+
 // use dashmap::DashMap;
 use rocket::serde::{Serialize, json::Json};
 use rocket_okapi::{
@@ -50,8 +52,10 @@ fn index() -> Json<Vec<Message>> {
 #[openapi]
 #[get("/etfs")]
 fn get_etfs() -> Json<Vec<Etf>> {
-    let csv_file_path = "src/etfs.csv"; // Adjust the path as needed
-    let etfs = read_etfs_from_csv(csv_file_path).unwrap_or_else(|err| {
+    let csv_file_path = path::Path::new(&env!("CARGO_MANIFEST_DIR"))
+        .join("data")
+        .join("etfs.csv");
+    let etfs = read_etfs_from_csv(csv_file_path.to_str().unwrap()).unwrap_or_else(|err| {
         eprintln!("Error reading ETFs from CSV: {}", err);
         Vec::new()
     });
