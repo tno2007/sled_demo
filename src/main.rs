@@ -10,6 +10,8 @@ use rocket_okapi::{
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
+
+use crate::modules::etf::Etf;
 //use std::error::Error;
 
 // import ./src/modules/etf.rs module
@@ -36,6 +38,17 @@ fn index() -> Json<Message> {
     Json(Message {
         text: "Welcome to the ETF API!".to_string(),
     })
+}
+
+#[openapi]
+#[get("/etfs")]
+fn get_etfs() -> Json<Vec<Etf>> {
+    let csv_file_path = "src/etfs.csv"; // Adjust the path as needed
+    let etfs = modules::etf::read_etfs_from_csv(csv_file_path).unwrap_or_else(|err| {
+        eprintln!("Error reading ETFs from CSV: {}", err);
+        Vec::new()
+    });
+    Json(etfs)
 }
 
 #[launch]

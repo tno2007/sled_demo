@@ -20,6 +20,17 @@ pub fn read_etfs_from_csv(file_path: &str) -> Result<Vec<Etf>, Box<dyn std::erro
 
     for result in rdr.deserialize() {
         let etf: Etf = result?;
+
+        // skip if the symbol is empty or contains spaces
+        if etf.symbol.trim().is_empty() || etf.symbol.contains(' ') {
+            continue;
+        }
+
+        // skip if the symbol starts with ^
+        if etf.symbol.starts_with('^') {
+            continue;
+        }
+
         etfs.push(etf);
     }
 
